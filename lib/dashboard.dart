@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lets_watch/StreamedList.dart';
+import 'package:lets_watch/constants/environment.dart';
 import 'ffmpeg_library.dart';
 
 enum VideoStreamMode { Publish, View }
@@ -36,8 +37,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final baseUrl = 'rtmp://192.168.1.100:1935';
-
   final StreamedList<VideoStream> videoList = StreamedList();
 
   String? currentPlayingStream = null;
@@ -97,18 +96,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void initialiseVLC() async {
     await destroyVLC();
-    _videoPlayerController =
-        VlcPlayerController.network('${baseUrl}/${currentPlayingStream!}',
-            autoPlay: true,
-            autoInitialize: false,
-            options: VlcPlayerOptions(
-              advanced: VlcAdvancedOptions(
-                [
-                  VlcAdvancedOptions.networkCaching(50),
-                ],
-              ),
-            ),
-            hwAcc: HwAcc.full);
+    _videoPlayerController = VlcPlayerController.network(
+        '${Environment.baseUrl}/${currentPlayingStream!}',
+        autoPlay: true,
+        autoInitialize: false,
+        options: VlcPlayerOptions(
+          advanced: VlcAdvancedOptions(
+            [
+              VlcAdvancedOptions.networkCaching(50),
+            ],
+          ),
+        ),
+        hwAcc: HwAcc.full);
     _videoPlayerController?.addListener(onListen);
     _videoPlayerController?.addOnInitListener(onInit);
     _videoPlayerController?.addOnRendererEventListener(onRenderEvent);
@@ -392,11 +391,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void ingest() {
     print(
-        '-re  -i ${currentSelectedFile!} -c:a aac -c:v h264 -b:v 2M  -f flv ${baseUrl}/${currentPlayingStream!}');
+        '-re  -i ${currentSelectedFile!} -c:a aac -c:v h264 -b:v 2M  -f flv ${Environment.baseUrl}/${currentPlayingStream!}');
     try {
       FFmpegKitConfig.setLogLevel(Level.avLogVerbose);
       FFmpegKit.executeAsync(
-          '-re  -i ${currentSelectedFile!} -c:a aac -c:v h264 -b:v 2M  -f flv ${baseUrl}/${currentPlayingStream!}',
+          '-re  -i ${currentSelectedFile!} -c:a aac -c:v h264 -b:v 2M  -f flv ${Environment.baseUrl}/${currentPlayingStream!}',
           // '-f h264 -thread_queue_size 4096 -vsync drop -i ${inputPath} -f h264 -ar 44100 -ac 2 -acodec pcm_s16le -thread_queue_size 4096 -i ${inputPath} -vcodec copy -acodec aac -ab 128k -f fifo -fifo_format flv -map 0:v -map 1:a -drop_pkts_on_overflow 1 -attempt_recovery 1 -recovery_wait_time 1 rtmp://192.168.1.100:1935/mystream',
           (c) {}, (log) {
         setLog = '\n' + log.getMessage();

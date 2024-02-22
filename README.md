@@ -10,6 +10,15 @@ I recommend this docker image -
 https://github.com/bluenviron/mediamtx?tab=readme-ov-file#docker-image
 ```
 
+### Change the base url
+
+In the flutter project, go to lib/constants/environment.dart and update the base url with your own ip address.
+
+```
+static const baseUrl = 'rtmp://192.168.1.100:1935';
+```
+
+
 ## Run Flutter project
 
 Run the project with just a simple command
