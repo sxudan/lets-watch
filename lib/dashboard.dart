@@ -136,6 +136,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setLog = 'Destroyed VLC';
     _videoPlayerController = null;
     _videoPlayerController?.dispose();
+    setState(() {});
   }
 
   @override
@@ -296,7 +297,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, set) {
           return AlertDialog(
-            title: Text('Add new stream'),
+            title: Text('Join stream'),
             content: Container(
               height: 150,
               child: Column(
