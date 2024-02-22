@@ -1,0 +1,108 @@
+PODS:
+  - better_player (0.0.1):
+    - Cache (~> 6.0.0)
+    - Flutter
+    - GCDWebServer
+    - HLSCachingReverseProxyServer
+    - PINCache
+  - Cache (6.0.0)
+  - ffmpeg-kit-ios-full (6.0)
+  - ffmpeg_kit_flutter_full (6.0.3):
+    - ffmpeg_kit_flutter_full/full (= 6.0.3)
+    - Flutter
+  - ffmpeg_kit_flutter_full/full (6.0.3):
+    - ffmpeg-kit-ios-full (= 6.0)
+    - Flutter
+  - Flutter (1.0.0)
+  - flutter_vlc_player (3.0.3):
+    - Flutter
+    - MobileVLCKit (~> 3.6.0b9)
+  - GCDWebServer (3.5.4):
+    - GCDWebServer/Core (= 3.5.4)
+  - GCDWebServer/Core (3.5.4)
+  - HLSCachingReverseProxyServer (0.1.0):
+    - GCDWebServer (~> 3.5)
+    - PINCache (>= 3.0.1-beta.3)
+  - image_picker_ios (0.0.1):
+    - Flutter
+  - images_picker (0.0.1):
+    - Flutter
+    - ZLPhotoBrowser (= 4.2.5)
+  - MobileVLCKit (3.6.0b10)
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - PINCache (3.0.3):
+    - PINCache/Arc-exception-safe (= 3.0.3)
+    - PINCache/Core (= 3.0.3)
+  - PINCache/Arc-exception-safe (3.0.3):
+    - PINCache/Core
+  - PINCache/Core (3.0.3):
+    - PINOperation (~> 1.2.1)
+  - PINOperation (1.2.2)
+  - wakelock (0.0.1):
+    - Flutter
+  - ZLPhotoBrowser (4.2.5):
+    - ZLPhotoBrowser/Core (= 4.2.5)
+  - ZLPhotoBrowser/Core (4.2.5)
+
+DEPENDENCIES:
+  - better_player (from `.symlinks/plugins/better_player/ios`)
+  - ffmpeg_kit_flutter_full (from `.symlinks/plugins/ffmpeg_kit_flutter_full/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_vlc_player (from `.symlinks/plugins/flutter_vlc_player/ios`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - images_picker (from `.symlinks/plugins/images_picker/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - wakelock (from `.symlinks/plugins/wakelock/ios`)
+
+SPEC REPOS:
+  trunk:
+    - Cache
+    - ffmpeg-kit-ios-full
+    - GCDWebServer
+    - HLSCachingReverseProxyServer
+    - MobileVLCKit
+    - PINCache
+    - PINOperation
+    - ZLPhotoBrowser
+
+EXTERNAL SOURCES:
+  better_player:
+    :path: ".symlinks/plugins/better_player/ios"
+  ffmpeg_kit_flutter_full:
+    :path: ".symlinks/plugins/ffmpeg_kit_flutter_full/ios"
+  Flutter:
+    :path: Flutter
+  flutter_vlc_player:
+    :path: ".symlinks/plugins/flutter_vlc_player/ios"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
+  images_picker:
+    :path: ".symlinks/plugins/images_picker/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
+  wakelock:
+    :path: ".symlinks/plugins/wakelock/ios"
+
+SPEC CHECKSUMS:
+  better_player: 2406bfe8175203c7a46fa15f9d778d73b12e1646
+  Cache: 4ca7e00363fca5455f26534e5607634c820ffc2d
+  ffmpeg-kit-ios-full: 0099a769d22114dde52cdc238397941c32f75d27
+  ffmpeg_kit_flutter_full: a2ad4ff5b14b7c040724edc8cd3bc293dd2d6d0f
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_vlc_player: 2e318881576450ff081eb023d47c289f2c6681eb
+  GCDWebServer: 2c156a56c8226e2d5c0c3f208a3621ccffbe3ce4
+  HLSCachingReverseProxyServer: 59935e1e0244ad7f3375d75b5ef46e8eb26ab181
+  image_picker_ios: 99dfe1854b4fa34d0364e74a78448a0151025425
+  images_picker: fa9364e3a7d3083c49f865fcfb2b9e7cdc574d3a
+  MobileVLCKit: 5600003cf2dc47acf7ad2fd87fe9f3739b2475ed
+  path_provider_foundation: 29f094ae23ebbca9d3d0cec13889cd9060c0e943
+  PINCache: 7a8fc1a691173d21dbddbf86cd515de6efa55086
+  PINOperation: daa34d4aa1d8449089be7d405b9d974abc4724c6
+  wakelock: d0fc7c864128eac40eba1617cb5264d9c940b46f
+  ZLPhotoBrowser: 4bfab86b851042e18d7f413284472aa68759626a
+
+PODFILE CHECKSUM: 819463e6a0290f5a72f145ba7cde16e8b6ef0796
+
+COCOAPODS: 1.14.3
