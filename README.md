@@ -57,3 +57,6 @@ You can see in the app, there are two buttons. Choose what you want to perform.
 
 ## Streaming on VLC player
 <img width=600 src="https://raw.githubusercontent.com/sxudan/lets-watch/main/Image2.png"/>
+
+## Final Result
+<img width=600 src="https://raw.githubusercontent.com/sxudan/lets-watch/main/sc.gif"/>
