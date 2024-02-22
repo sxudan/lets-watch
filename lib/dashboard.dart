@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lets_watch/StreamedList.dart';
-import './lib.dart';
+import 'ffmpeg_library.dart';
 
 enum VideoStreamMode { Publish, View }
 
