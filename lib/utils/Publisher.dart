@@ -5,15 +5,15 @@ import 'package:lets_watch/constants/environment.dart';
 import '../ffmpeg_library.dart';
 
 class Publisher {
-  static void ingest({
-    required String filePath,
-    required String name,
-    Function(String)? onLog,
-    Function(Statistics)? onStats,
-    Function(Object)? onError,
-  }) {
+  static void ingest(
+      {required String filePath,
+      required String name,
+      Function(String)? onLog,
+      Function(Statistics)? onStats,
+      Function(Object)? onError,
+      String? offsetStartTime}) {
     String cmd =
-        '-re  -i ${filePath} -c:a aac -c:v h264 -b:v 2M  -f flv ${Environment.baseUrl}/${name}';
+        '${offsetStartTime == null ? "" : "-ss $offsetStartTime"} -re  -i ${filePath} -c:a aac -c:v h264 -b:v 2M  -f flv ${Environment.baseUrl}/${name}';
     print(cmd);
     try {
       FFmpegKitConfig.setLogLevel(Level.avLogVerbose);

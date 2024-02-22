@@ -10,9 +10,11 @@ import 'package:lets_watch/utils/Publisher.dart';
 enum VideoStreamMode { Publish, View }
 
 class VideoStream {
-  VideoStream({required this.name, required this.mode});
+  VideoStream(
+      {required this.name, required this.mode, required this.startOffset});
   final String name;
   final VideoStreamMode mode;
+  final String startOffset;
 }
 
 enum PublishingState {
@@ -50,6 +52,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   StreamingState get streamingState => _streamingState;
 
   ScrollController _scrollController = ScrollController();
+
+  double videoAspectRatio = 16 / 9;
+
+  bool isPlaying = false;
+
+  String startTimeOffset = '00:00:00';
 
   set setLog(String log) {
     logs.value += '\n' + log;
@@ -150,12 +158,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void onInit() {
     if (!mounted) return;
     print('On Initialised');
+    videoAspectRatio = _videoPlayerController?.value.aspectRatio ?? 16 / 9;
     setState(() {});
   }
 
   void onListen() {
     if (!mounted) return;
     // print('On Listening');
+    var currentIsPlaying = _videoPlayerController?.value.isPlaying ?? false;
+    if (isPlaying != currentIsPlaying) {
+      isPlaying = currentIsPlaying;
+      setState(() {});
+    }
   }
 
   void onRenderEvent(VlcRendererEventType type, String s1, String s2) {
@@ -167,9 +181,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget buildPlayer() {
     return Container(
       color: Colors.black,
-      child: VlcPlayer(
-        controller: _videoPlayerController!,
-        aspectRatio: 16 / 9,
+      child: Stack(
+        children: [
+          VlcPlayer(
+            controller: _videoPlayerController!,
+            aspectRatio: videoAspectRatio,
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 44,
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      if (isPlaying) {
+                        _videoPlayerController?.pause();
+                      } else {
+                        _videoPlayerController?.play();
+                      }
+                      setState(() {});
+                    },
+                    icon:
+                        isPlaying ? Icon(Icons.pause) : Icon(Icons.play_arrow),
+                  ),
+                  SizedBox(
+                    width: 16,
+                  ),
+                ],
+              ),
+            ),
+          )
+        ],
       ),
     );
   }
@@ -207,6 +252,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (videos[index].mode == VideoStreamMode.Publish) {
                     if (currentPlayingStream == null) {
                       currentPlayingStream = videos[index].name;
+                      startTimeOffset = videos[index].startOffset;
                       publishingState = PublishingState.RequestPublish;
                     } else {
                       currentPlayingStream = null;
@@ -230,11 +276,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             );
           },
         ),
-        SizedBox(
+        const SizedBox(
           height: 16,
         ),
         if (_videoPlayerController != null) buildPlayer(),
-        SizedBox(
+        const SizedBox(
           height: 16,
         ),
         buildLogboard()
@@ -277,8 +323,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   videoList.updateList(
                     [
                       VideoStream(
-                          name: textFieldController.text,
-                          mode: VideoStreamMode.View)
+                        name: textFieldController.text,
+                        mode: VideoStreamMode.View,
+                        startOffset: '00:00:00',
+                      ),
                     ],
                   );
                   setLog = '${textFieldController.text} added';
@@ -295,6 +343,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void onAddStream() async {
     var textFieldController = TextEditingController();
+    var hhFieldController = TextEditingController(text: '00');
+    var mmFieldController = TextEditingController(text: '00');
+    var ssFieldController = TextEditingController(text: '00');
     currentSelectedFile = null;
     await showDialog(
       context: context,
@@ -303,7 +354,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return AlertDialog(
             title: Text('Add new stream'),
             content: Container(
-              height: 150,
+              height: 300,
               child: Column(
                 children: [
                   TextField(
@@ -332,6 +383,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       });
                     },
                   ),
+                  SizedBox(
+                    height: 16,
+                  ),
+                  Text('Start time'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        child: TextField(
+                          controller: hhFieldController,
+                          textAlign: TextAlign.center,
+                          decoration: new InputDecoration(hintText: 'hh'),
+                        ),
+                      ),
+                      Container(
+                        width: 50,
+                        child: Text(
+                          ':',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      Container(
+                        width: 50,
+                        height: 50,
+                        child: TextField(
+                          controller: mmFieldController,
+                          textAlign: TextAlign.center,
+                          decoration: new InputDecoration(hintText: 'mm'),
+                        ),
+                      ),
+                      Container(
+                        width: 50,
+                        child: Text(
+                          ':',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      Container(
+                        width: 50,
+                        height: 50,
+                        child: TextField(
+                          controller: ssFieldController,
+                          textAlign: TextAlign.center,
+                          decoration: new InputDecoration(hintText: 'ss'),
+                        ),
+                      ),
+                    ],
+                  )
                 ],
               ),
             ),
@@ -348,7 +449,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     [
                       VideoStream(
                           name: textFieldController.text,
-                          mode: VideoStreamMode.Publish)
+                          mode: VideoStreamMode.Publish,
+                          startOffset:
+                              '${hhFieldController.text}:${mmFieldController.text}:${ssFieldController.text}')
                     ],
                   );
                   setLog = '${textFieldController.text} added';
@@ -393,6 +496,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Publisher.ingest(
         filePath: currentSelectedFile!,
         name: currentPlayingStream!,
+        offsetStartTime: startTimeOffset,
         onLog: (log) {
           setLog = '\n' + log;
         },
