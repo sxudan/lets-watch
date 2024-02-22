@@ -30,6 +30,20 @@ flutter run
 
 You can see in the app, there are two buttons. Choose what you want to perform. 
 
+### Create watch party
+
+> Click on create party
+<img width=300 src="https://raw.githubusercontent.com/sxudan/lets-watch/main/create_party.jpeg"/>
+
+> Add Stream Name (mystream)
+
+> Click Select Video and choose the video you want to publish
+
+> Press Ok
+
+> Click on Play button to broadcast
+
+
 # Screenshots
 
 ## Ingest
