@@ -4,7 +4,7 @@ import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:images_picker/images_picker.dart';
 import 'package:lets_watch/constants/environment.dart';
-import 'package:lets_watch/utils/FilePublisher.dart';
+import 'package:live_file_publisher/live_file_publisher.dart';
 import 'package:video_compress/video_compress.dart';
 
 enum VideoStreamType { Publish, View }
@@ -54,7 +54,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   ValueNotifier<double> compressProgress = ValueNotifier(0.0);
 
-  FilePublisher filePublisher = FilePublisher(
+  LiveFilePublisher filePublisher = LiveFilePublisher(
       mode: PublisherProtocol.RTSP_UDP, baseUrl: Environment.baseRtspUrl);
 
   VideoStream? currentBroadcastingStream;
@@ -69,9 +69,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
     filePublisher.addStateListener(onStateListener);
     filePublisher.addErrorListener(onErrorListener);
-    filePublisher.addLogListener((log) {
-      setLog = log;
-    });
+    filePublisher.addLogListener(onLogListener);
   }
 
   void onStateListener(PublishingState state) {
@@ -81,6 +79,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void onErrorListener(Object error) {
     print(error);
+  }
+
+  void onLogListener(String log) {
+    print(log);
   }
 
   set setLog(String log) {

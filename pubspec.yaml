@@ -8,7 +8,6 @@ environment:
 
 dependencies:
   better_player: ^0.0.63
-  ffmpeg_kit_flutter_full: ^6.0.3
   flutter:
     sdk: flutter
   images_picker: ^1.2.11
@@ -16,6 +15,7 @@ dependencies:
   intl: ^0.18.1
   flutter_vlc_player: ^7.4.1
   video_compress: ^3.1.2
+  live_file_publisher: ^0.0.1
 
 dev_dependencies:
   flutter_test:

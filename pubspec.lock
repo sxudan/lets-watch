@@ -90,7 +90,7 @@ packages:
     source: hosted
     version: "2.1.0"
   ffmpeg_kit_flutter_full:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: ffmpeg_kit_flutter_full
       sha256: c845c1bcf40a8869eab9e401526c6cf3fc8091d04c0a7ec9a0af854d6c7e354a
@@ -320,6 +320,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
+  live_file_publisher:
+    dependency: "direct main"
+    description:
+      name: live_file_publisher
+      sha256: "209bb81db043770112e5719904188a8f5e6f00ab79dffd166472106c63ff847a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   matcher:
     dependency: transitive
     description:
@@ -590,5 +598,5 @@ packages:
     source: hosted
     version: "6.5.0"
 sdks:
-  dart: ">=3.2.0 <4.0.0"
+  dart: ">=3.2.6 <4.0.0"
   flutter: ">=3.14.0-0"
