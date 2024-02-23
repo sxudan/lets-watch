@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:images_picker/images_picker.dart';
 import 'package:lets_watch/StreamedList.dart';
 import 'package:lets_watch/constants/environment.dart';
 import 'package:lets_watch/utils/Publisher.dart';
+import 'package:video_compress/video_compress.dart';
 
 enum VideoStreamMode { Publish, View }
 
@@ -58,6 +61,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool isPlaying = false;
 
   String startTimeOffset = '00:00:00';
+
+  late Subscription _subscription;
+
+  ValueNotifier<double> compressProgress = ValueNotifier(0.0);
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = VideoCompress.compressProgress$.subscribe((progress) {
+      debugPrint('progress: ${double.parse('$progress')}');
+      compressProgress.value = double.parse('$progress');
+    });
+  }
 
   set setLog(String log) {
     logs.value += '\n' + log;
@@ -125,6 +141,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void dispose() async {
     destroyVLC();
     super.dispose();
+    _subscription.unsubscribe();
   }
 
   Future<void> destroyVLC() async {
@@ -347,6 +364,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     var hhFieldController = TextEditingController(text: '00');
     var mmFieldController = TextEditingController(text: '00');
     var ssFieldController = TextEditingController(text: '00');
+    var useDefaultCompressiong = false;
     currentSelectedFile = null;
     await showDialog(
       context: context,
@@ -365,6 +383,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   SizedBox(
                     height: 16,
                   ),
+                  Row(
+                    children: [
+                      Expanded(
+                          child: Text(
+                        'Default compression (Faster)',
+                        maxLines: 5,
+                      )),
+                      Expanded(child: SizedBox()),
+                      SizedBox(
+                        width: 70,
+                        child: Switch(
+                            value: useDefaultCompressiong,
+                            onChanged: (v) {
+                              set(() {
+                                useDefaultCompressiong = v;
+                              });
+                            }),
+                      )
+                    ],
+                  ),
+                  SizedBox(
+                    height: 16,
+                  ),
                   Text(
                     currentSelectedFile ?? '',
                     maxLines: 1,
@@ -372,17 +413,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   TextButton(
                     child: Text('Select Video'),
                     onPressed: () async {
-                      var f = await ImagePicker()
-                          .pickVideo(source: ImageSource.gallery);
-                      if (f == null) {
-                        return;
-                      }
-                      var inputPath = f.path;
+                      if (useDefaultCompressiong) {
+                        var f = await ImagePicker()
+                            .pickVideo(source: ImageSource.gallery);
+                        if (f == null) {
+                          return;
+                        }
+                        var inputPath = f.path;
 
-                      set(() {
-                        currentSelectedFile = inputPath;
-                      });
+                        set(() {
+                          currentSelectedFile = inputPath;
+                        });
+                      } else {
+                        var c = await ImagesPicker.pick(
+                            quality: 1,
+                            pickType: PickType.video,
+                            count: 1,
+                            maxTime: 5 * 60 * 60);
+                        if (c == null || c.length == 0) {
+                          return;
+                        }
+                        var inputPath = c[0].path;
+
+                        var result = await VideoCompress.compressVideo(
+                          inputPath,
+                          quality: VideoQuality.Res1280x720Quality,
+                        );
+
+                        if (result == null || result.file == null) {
+                          return;
+                        }
+
+                        set(() {
+                          currentSelectedFile = result.file!.path;
+                        });
+                      }
                     },
+                  ),
+                  ValueListenableBuilder(
+                    valueListenable: compressProgress,
+                    builder: (context, value, child) => LinearProgressIndicator(
+                      value: value / 100,
+                    ),
                   ),
                   SizedBox(
                     height: 16,
@@ -439,7 +511,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () {
+                onPressed: () async {
+                  await VideoCompress.cancelCompression();
+                  await VideoCompress.deleteAllCache();
+                  compressProgress.value = 0;
                   Navigator.pop(context);
                 },
                 child: Text('Cancel'),

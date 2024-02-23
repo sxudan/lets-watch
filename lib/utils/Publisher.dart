@@ -12,6 +12,8 @@ class Publisher {
       Function(Statistics)? onStats,
       Function(Object)? onError,
       String? offsetStartTime}) {
+    // String cmd =
+    //     '-re -i ${filePath} -c:v h264 -vf "scale=1280:720" -s 1280x720 -preset ultrafast -c:a copy -color_primaries bt709 -color_trc bt709 -colorspace bt709 -f flv ${Environment.baseUrl}/${name}';
     String cmd =
         '${offsetStartTime == null ? "" : "-ss $offsetStartTime"} -re  -i ${filePath} -c:a aac -c:v h264 -b:v 2M  -f flv ${Environment.baseUrl}/${name}';
     print(cmd);
