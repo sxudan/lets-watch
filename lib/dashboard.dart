@@ -251,11 +251,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ListTile(
             leading: Icon(Icons.broadcast_on_home),
             title: Text(currentBroadcastingStream!.name),
+            subtitle: Text(
+                '${filePublisher.baseUrl}/${currentBroadcastingStream!.name}'),
             trailing: IconButton(
               icon: Icon(
                   filePublisher.publishingState == PublishingState.Publishing
-                      ? Icons.pause
-                      : Icons.play_arrow),
+                      ? Icons.stop
+                      : Icons.publish),
               onPressed: () {
                 if (currentBroadcastingStream!.type ==
                     VideoStreamType.Publish) {
