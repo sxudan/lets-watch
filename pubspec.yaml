@@ -15,7 +15,7 @@ dependencies:
   intl: ^0.18.1
   flutter_vlc_player: ^7.4.1
   video_compress: ^3.1.2
-  live_file_publisher: ^0.0.2
+  live_file_publisher: ^0.0.5
 
 dev_dependencies:
   flutter_test:

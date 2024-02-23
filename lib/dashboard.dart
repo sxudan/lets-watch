@@ -54,8 +54,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   ValueNotifier<double> compressProgress = ValueNotifier(0.0);
 
-  LiveFilePublisher filePublisher = LiveFilePublisher(
-      mode: PublisherProtocol.RTSP_UDP, baseUrl: Environment.baseRtspUrl);
+  LiveFilePublisher filePublisher = LiveFilePublisher();
 
   VideoStream? currentBroadcastingStream;
   VideoStream? currentPlayingStream;
@@ -82,7 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void onLogListener(String log) {
-    print(log);
+    setLog = log;
   }
 
   set setLog(String log) {
@@ -265,10 +264,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     VideoStreamType.Publish) {
                   print('Publish called');
                   if (filePublisher.publishingState == PublishingState.Normal) {
-                    filePublisher.publish(
-                        startTime: currentBroadcastingStream!.startOffset,
-                        filePath: currentBroadcastingStream!.path ?? '',
-                        name: currentBroadcastingStream!.name);
+                    try {
+                      filePublisher.connect(
+                          url: Environment.baseRtspUrl,
+                          mode: PublisherProtocol.RTSP_UDP);
+                      filePublisher.publish(
+                          startTime: currentBroadcastingStream!.startOffset,
+                          filePath: currentBroadcastingStream!.path ?? '',
+                          name: currentBroadcastingStream!.name);
+                    } catch (e) {
+                      print(e);
+                    }
                   } else {
                     filePublisher.stop();
                   }
