@@ -50,6 +50,19 @@ You can see in the app, there are two buttons. Choose what you want to perform.
 > Click on Play button to broadcast
 
 
+### View watch party
+
+> Click on Join stream
+
+> Input the stream name and click OK
+
+> Click on Play button to Play
+
+With the above docker image server you can play the stream using HLS streaming too
+```
+http://<ip-address>:8888/<stream-name>
+```
+
 # Screenshots
 
 ## Ingest
