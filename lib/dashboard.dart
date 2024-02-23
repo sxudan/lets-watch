@@ -1,30 +1,24 @@
 import 'dart:async';
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:images_picker/images_picker.dart';
-import 'package:lets_watch/StreamedList.dart';
 import 'package:lets_watch/constants/environment.dart';
-import 'package:lets_watch/utils/Publisher.dart';
+import 'package:lets_watch/utils/FilePublisher.dart';
 import 'package:video_compress/video_compress.dart';
 
-enum VideoStreamMode { Publish, View }
+enum VideoStreamType { Publish, View }
 
 class VideoStream {
   VideoStream(
-      {required this.name, required this.mode, required this.startOffset});
+      {required this.name,
+      required this.type,
+      required this.startOffset,
+      this.path});
   final String name;
-  final VideoStreamMode mode;
+  final String? path;
+  final VideoStreamType type;
   final String startOffset;
-}
-
-enum PublishingState {
-  Normal,
-  RequestPublish,
-  Publishing,
-  RequestStopPublish,
 }
 
 enum StreamingState {
@@ -42,16 +36,10 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final StreamedList<VideoStream> videoList = StreamedList();
-
-  String? currentPlayingStream = null;
-  String? currentSelectedFile = null;
   ValueNotifier<String> logs = ValueNotifier('');
   VlcPlayerController? _videoPlayerController;
-  PublishingState _publishingState = PublishingState.Normal;
   StreamingState _streamingState = StreamingState.Normal;
 
-  PublishingState get publishingState => _publishingState;
   StreamingState get streamingState => _streamingState;
 
   ScrollController _scrollController = ScrollController();
@@ -66,6 +54,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   ValueNotifier<double> compressProgress = ValueNotifier(0.0);
 
+  FilePublisher filePublisher = FilePublisher(
+      mode: PublisherProtocol.RTSP_UDP, baseUrl: Environment.baseRtspUrl);
+
+  VideoStream? currentBroadcastingStream;
+  VideoStream? currentPlayingStream;
+
   @override
   void initState() {
     super.initState();
@@ -73,6 +67,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       debugPrint('progress: ${double.parse('$progress')}');
       compressProgress.value = double.parse('$progress');
     });
+    filePublisher.addStateListener(onStateListener);
+    filePublisher.addErrorListener(onErrorListener);
+    filePublisher.addLogListener((log) {
+      setLog = log;
+    });
+  }
+
+  void onStateListener(PublishingState state) {
+    print(state);
+    setState(() {});
+  }
+
+  void onErrorListener(Object error) {
+    print(error);
   }
 
   set setLog(String log) {
@@ -98,40 +106,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  set publishingState(PublishingState state) {
-    print(state);
-    _publishingState = state;
-    switch (state) {
-      case PublishingState.RequestPublish:
-        streamingState = StreamingState.RequestStream;
-        ingest();
-        break;
-      case PublishingState.Publishing:
-        streamingState = StreamingState.Streaming;
-        break;
-      case PublishingState.RequestStopPublish:
-        streamingState = StreamingState.RequestStopStream;
-        cancelIngest();
-        break;
-      default:
-        break;
-    }
-  }
-
   void initialiseVLC() async {
     await destroyVLC();
     _videoPlayerController = VlcPlayerController.network(
-        '${Environment.baseUrl}/${currentPlayingStream!}',
-        autoPlay: true,
-        autoInitialize: false,
-        options: VlcPlayerOptions(
-          advanced: VlcAdvancedOptions(
-            [
-              VlcAdvancedOptions.networkCaching(50),
-            ],
-          ),
+      '${Environment.baseUrl}/${currentPlayingStream!.name}',
+      autoPlay: true,
+      autoInitialize: false,
+      allowBackgroundPlayback: true,
+      options: VlcPlayerOptions(
+        // rtp: VlcRtpOptions([VlcRtpOptions.rtpOverRtsp(false)]),
+        // audio: VlcAudioOptions([VlcAudioOptions.audioTimeStretch(true)]),
+        // video: VlcVideoOptions([
+        //   VlcVideoOptions.skipFrames(true),
+        //   VlcVideoOptions.dropLateFrames(true)
+        // ]),
+        advanced: VlcAdvancedOptions(
+          [
+            VlcAdvancedOptions.networkCaching(0),
+            VlcAdvancedOptions.clockSynchronization(0),
+            VlcAdvancedOptions.liveCaching(0),
+          ],
         ),
-        hwAcc: HwAcc.full);
+      ),
+      hwAcc: HwAcc.auto,
+    );
     _videoPlayerController?.addListener(onListen);
     _videoPlayerController?.addOnInitListener(onInit);
     _videoPlayerController?.addOnRendererEventListener(onRenderEvent);
@@ -153,6 +151,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setLog = 'Destroyed VLC';
     _videoPlayerController = null;
     _videoPlayerController?.dispose();
+    streamingState = StreamingState.Normal;
     setState(() {});
   }
 
@@ -161,13 +160,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('Watch Party')),
       body: SafeArea(
-        child: StreamBuilder(
-          stream: videoList.data,
-          builder: (context, snapshot) {
-            print('Rebuilding');
-            var data = snapshot.data ?? [];
-            return buildBody(data);
-          },
+        child: SingleChildScrollView(
+          child: buildBody(),
         ),
       ),
     );
@@ -237,7 +231,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget buildBody(List<VideoStream> videos) {
+  Widget buildBody() {
     return Column(
       children: [
         Row(
@@ -253,47 +247,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
             )
           ],
         ),
-        ListView.builder(
-          shrinkWrap: true,
-          itemCount: videos.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              leading: videos[index].mode == VideoStreamMode.Publish
-                  ? Icon(Icons.broadcast_on_home)
-                  : Icon(Icons.remove_red_eye),
-              title: Text(videos[index].name),
-              trailing: IconButton(
-                icon: Icon(currentPlayingStream == videos[index].name
-                    ? Icons.pause
-                    : Icons.play_arrow),
-                onPressed: () {
-                  if (videos[index].mode == VideoStreamMode.Publish) {
-                    if (currentPlayingStream == null) {
-                      currentPlayingStream = videos[index].name;
-                      startTimeOffset = videos[index].startOffset;
-                      publishingState = PublishingState.RequestPublish;
-                    } else {
-                      currentPlayingStream = null;
-                      publishingState = PublishingState.RequestStopPublish;
-                    }
+        if (currentBroadcastingStream != null)
+          ListTile(
+            leading: Icon(Icons.broadcast_on_home),
+            title: Text(currentBroadcastingStream!.name),
+            trailing: IconButton(
+              icon: Icon(
+                  filePublisher.publishingState == PublishingState.Publishing
+                      ? Icons.pause
+                      : Icons.play_arrow),
+              onPressed: () {
+                if (currentBroadcastingStream!.type ==
+                    VideoStreamType.Publish) {
+                  print('Publish called');
+                  if (filePublisher.publishingState == PublishingState.Normal) {
+                    filePublisher.publish(
+                        startTime: currentBroadcastingStream!.startOffset,
+                        filePath: currentBroadcastingStream!.path ?? '',
+                        name: currentBroadcastingStream!.name);
                   } else {
-                    if (currentPlayingStream == null) {
-                      currentPlayingStream = videos[index].name;
-                      streamingState = StreamingState.RequestStream;
-                      Future.delayed(Duration(seconds: 1), () {
-                        streamingState = StreamingState.Streaming;
-                      });
-                    } else {
-                      currentPlayingStream = null;
-                      streamingState = StreamingState.RequestStopStream;
-                    }
+                    filePublisher.stop();
                   }
-                  setState(() {});
-                },
-              ),
-            );
-          },
-        ),
+                }
+                setState(() {});
+              },
+            ),
+          ),
+        if (currentPlayingStream != null)
+          ListTile(
+            leading: Icon(Icons.remove_red_eye),
+            title: Text(currentPlayingStream!.name),
+            trailing: IconButton(
+              icon: Icon(streamingState == StreamingState.Streaming
+                  ? Icons.pause
+                  : Icons.play_arrow),
+              onPressed: () {
+                if (currentPlayingStream!.type == VideoStreamType.View) {
+                  if (streamingState == StreamingState.Normal) {
+                    streamingState = StreamingState.RequestStream;
+                    Future.delayed(Duration(seconds: 2), () {
+                      streamingState = StreamingState.Streaming;
+                    });
+                  } else {
+                    streamingState = StreamingState.RequestStopStream;
+                  }
+                }
+                setState(() {});
+              },
+            ),
+          ),
         const SizedBox(
           height: 16,
         ),
@@ -308,7 +310,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void onJoinStream() async {
     var textFieldController = TextEditingController();
-    currentSelectedFile = null;
     await showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -338,17 +339,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               TextButton(
                 onPressed: () {
-                  videoList.updateList(
-                    [
-                      VideoStream(
-                        name: textFieldController.text,
-                        mode: VideoStreamMode.View,
-                        startOffset: '00:00:00',
-                      ),
-                    ],
+                  currentPlayingStream = VideoStream(
+                    name: textFieldController.text,
+                    type: VideoStreamType.View,
+                    startOffset: '00:00:00',
                   );
                   setLog = '${textFieldController.text} added';
                   Navigator.pop(context);
+                  setState(() {});
                 },
                 child: Text('OK'),
               )
@@ -365,7 +363,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     var mmFieldController = TextEditingController(text: '00');
     var ssFieldController = TextEditingController(text: '00');
     var useDefaultCompressiong = false;
-    currentSelectedFile = null;
+    var currentSelectedFile = null;
     await showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -521,17 +519,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               TextButton(
                 onPressed: () {
-                  videoList.updateList(
-                    [
-                      VideoStream(
-                          name: textFieldController.text,
-                          mode: VideoStreamMode.Publish,
-                          startOffset:
-                              '${hhFieldController.text}:${mmFieldController.text}:${ssFieldController.text}')
-                    ],
-                  );
+                  currentBroadcastingStream = VideoStream(
+                      name: textFieldController.text,
+                      type: VideoStreamType.Publish,
+                      path: currentSelectedFile,
+                      startOffset:
+                          '${hhFieldController.text}:${mmFieldController.text}:${ssFieldController.text}');
                   setLog = '${textFieldController.text} added';
                   Navigator.pop(context);
+                  setState(() {});
                 },
                 child: Text('OK'),
               )
@@ -566,30 +562,5 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
-  }
-
-  void ingest() {
-    Publisher.ingest(
-        filePath: currentSelectedFile!,
-        name: currentPlayingStream!,
-        offsetStartTime: startTimeOffset,
-        onLog: (log) {
-          setLog = '\n' + log;
-        },
-        onStats: (stats) {
-          if (publishingState == PublishingState.RequestPublish) {
-            publishingState = PublishingState.Publishing;
-            setState(() {});
-          }
-        },
-        onError: (error) {
-          print(error);
-        });
-  }
-
-  void cancelIngest() {
-    Publisher.cancelIngest().then((value) {
-      publishingState = PublishingState.Normal;
-    });
   }
 }
