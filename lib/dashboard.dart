@@ -86,7 +86,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   set setLog(String log) {
     logs.value += '\n' + log;
-    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    Future.delayed(Duration(milliseconds: 500), () {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    });
   }
 
   set streamingState(StreamingState state) {
@@ -110,7 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initialiseVLC() async {
     await destroyVLC();
     _videoPlayerController = VlcPlayerController.network(
-      '${Environment.baseUrl}/${currentPlayingStream!.name}',
+      '${Environment.baseHlsUrl}/${currentPlayingStream!.name}',
       autoPlay: true,
       autoInitialize: false,
       allowBackgroundPlayback: true,

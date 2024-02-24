@@ -324,10 +324,10 @@ packages:
     dependency: "direct main"
     description:
       name: live_file_publisher
-      sha256: "395e24e20ea8aafe6f12261666eeee2079886c726f9574310d90d15a21b3b464"
+      sha256: "6cd86cc1466aad98f7666a511a383d254701bbfd7bd551a08d00a9d6a8a399a2"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.5"
+    version: "0.1.0"
   matcher:
     dependency: transitive
     description:
